@@ -1,28 +1,25 @@
 #!/usr/bin/python3
+""" a script that starts a Flask web application """
+from flask import Flask
+from flask import render_template
+from models import storage, State, Amenity
 
-from models import *
-from flask import Flask, render_template
 app = Flask(__name__)
 
 
-@app.route('/hbnb_filters')
-def hbnb_filters():
-    all_info = {}
-    states = storage.all("State").values()
-    amenities = storage.all("Amenity").values()
-    for state in states:
-        all_info[state.name] = state
-
-
-    return render_template('10-hbnb_filters.html',
-                           states=all_info,
-                           amenities=amenities)
-
-
 @app.teardown_appcontext
-def teardown(err):
+def remove_session(exception):
+    """ After each request, it removes the current SQLAlchemy Session """
     storage.close()
 
 
-if __name__ == "__main__":
-    app.run(host='0.0.0.0')
+@app.route('/hbnb_filters', strict_slashes=False)
+def render_states_amenities():
+    """ displays states and cities """
+    States = storage.all(State).values()
+    Amenities = storage.all(Amenity).values()
+    return render_template("10-hbnb_filters.html", States=States, Amenities=Amenities)
+
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=5000)

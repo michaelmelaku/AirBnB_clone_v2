@@ -1,35 +1,33 @@
 #!/usr/bin/python3
-"""
-starts a Flask web application
-"""
+""" a script that starts a Flask web application """
+from flask import Flask
+from flask import render_template
+from models import storage, State
 
-from models import *
-from flask import Flask, render_template
 app = Flask(__name__)
 
 
-@app.route('/states', strict_slashes=False)
-def states():
-    states = storage.all("State")
-    return render_template('9-states.html', states=states)
-
-
-@app.route('/states/<id>', strict_slashes=False)
-def states_given_id(id):
-    states = storage.all("State")
-    found_state = ""
-    for s_id in states:
-        if s_id == id:
-            found_state = states[s_id]
-
-    return render_template('9-states.html',
-                           state=found_state)
-
-
 @app.teardown_appcontext
-def teardown(err):
+def remove_session(exception):
+    """ After each request, it removes the current SQLAlchemy Session """
     storage.close()
 
 
-if __name__ == "__main__":
-    app.run(host='0.0.0.0')
+@app.route('/states', strict_slashes=False)
+def render_states():
+    """ displays all states """
+    States = storage.all(State).values()
+    return render_template("9-states.html", States=States, one=None)
+
+
+@app.route('/states/<string:id>', strict_slashes=False)
+def render_one_state(id):
+    """ displays one state if it exists """
+    key = "State." + id
+    one = None
+    if key in storage.all(State):
+        one = storage.all(State)[key]
+    return render_template("9-states.html", States=None, one=one)
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=5000)
